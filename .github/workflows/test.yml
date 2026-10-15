@@ -1,0 +1,27 @@
+name: Test VPS initializer
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq curl python3 util-linux
+      - name: Check Bash syntax
+        run: bash -n vps-init.sh
+      - name: Run isolated tests
+        run: python3 -m unittest discover -s tests -v
