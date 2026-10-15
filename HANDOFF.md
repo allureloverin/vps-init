@@ -30,7 +30,7 @@
 
 2026-10-15 在当前 Windows 电脑继续开发：修复 DDNS 安装中途失败后无法重试的问题。已有配置时，菜单 `1` 会沿用配置，验证成功后重新安装程序、服务和定时任务；仅残留服务文件时允许重新输入配置。新增 4 项回归测试，覆盖恢复、失败重试和验证失败不覆盖原安装。
 
-当前电脑使用 Git 自带的 Bash（`sh.exe`）通过语法检查、原有 8 项初始化测试和新增 4 项恢复测试，共 12 项。测试入口通过临时适配脚本将 `bash` 命令映射到该 shell；未修改正式 Linux 测试入口。本机未安装 WSL，缺少 jq 等完整 Linux 依赖，原有 11 项 DDNS worker 测试本次未重跑。新添加的 GitHub Actions 配置尚未在远端执行；推送后需确认两套 Ubuntu 环境中的全部 23 项测试结果。
+当前电脑使用 Git 自带的 Bash（`sh.exe`）通过语法检查、原有 8 项初始化测试和新增 4 项恢复测试，共 12 项。测试入口通过临时适配脚本将 `bash` 命令映射到该 shell；未修改正式 Linux 测试入口。本机未安装 WSL，缺少 jq 等完整 Linux 依赖，原有 11 项 DDNS worker 测试本次未重跑。GitHub Actions 配置已纳入仓库；两套 Ubuntu 环境中的全部 23 项测试结果以仓库 Actions 页面为准。
 
 尚未在真实新 VPS 上执行系统升级和校时，也未使用真实 Cloudflare Token 更新真实 DNS。项目不包含真实 Token 或账号凭证。
 
@@ -45,20 +45,14 @@ python3 -m unittest discover -s tests -v
 
 ## GitHub 发布状态
 
-2026-10-15 已通过当前 GitHub 连接确认账号为 `allureloverin`；读取 `allureloverin/vps-init` 返回 404，当前连接未找到目标仓库。未创建或上传远程仓库。拟创建公开仓库 `allureloverin/vps-init`。前文出现的 `ibsgss/TcpQuality` 仅为运行命令形式的示例，不是本项目的目标仓库。
+项目已由用户上传到公开仓库 [allureloverin/vps-init](https://github.com/allureloverin/vps-init)，默认分支为 `main`。2026-10-15 已确认当前 GitHub 连接可以读取仓库，但写入接口返回 `403: Resource not accessible by integration`；修改请通过 GitHub 网页或已授权的本地 Git 提交。
 
-当前电脑已把 `outputs/vps-init` 初始化为独立 Git 仓库，分支为 `main`，远程 `origin` 指向上述地址。发布准备包含源码 ZIP、Git bundle 和 [PUBLISH.md](PUBLISH.md) 操作说明；提交身份使用 GitHub 的 noreply 邮箱。
-
-本会话的 GitHub 连接可以操作用户已有仓库，但没有提供创建仓库接口。本机没有安装 GitHub CLI。可先通过 GitHub 网页创建空仓库，再在已有本地仓库中推送：
-
-```bash
-git push -u origin main
-```
-
-若目标仓库已经存在，先确认访问权限和已有内容。发布后再核对实际仓库地址和 `main` 分支中的脚本内容，等待 GitHub Actions 的两套 Ubuntu 测试通过。预期的一键运行命令如下，目前该地址尚未验证可用：
+用户已将 README 中的示例运行地址替换为实际地址。完整项目应包含 `tests` 和 `.github` 两个目录，网页上传时请一并上传；未上传时不会运行自动测试。
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/allureloverin/vps-init/main/vps-init.sh)
 ```
 
-该命令应在目标 VPS 的 root Bash 终端运行。运行前确保 curl 和 CA 证书已安装。
+该命令应在目标 VPS 的 root Bash 终端运行，需已有 curl 和 CA 证书。已通过 GitHub 连接确认 raw 脚本内容与仓库脚本一致。
+
+维护方法见 [PUBLISH.md](PUBLISH.md)，自动测试执行状态见 [GitHub Actions](https://github.com/allureloverin/vps-init/actions)。
