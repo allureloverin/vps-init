@@ -8,13 +8,13 @@
 sudo bash vps-init.sh
 ```
 
-也支持直接在线运行。将 `vps-init.sh` 上传到公开 GitHub 仓库后，在 VPS 的 **root Bash 终端**执行：
+也支持直接在线运行。将 `vps-init.sh` 上传到公开 GitHub 仓库后，在 VPS 的 root Bash 终端执行：
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/你的用户名/你的仓库/main/vps-init.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/allureloverin/vps-init/main/vps-init.sh)
 ```
 
-上面是地址格式示例，需替换用户名、仓库名、分支和实际文件路径；当前脚本尚未发布到该地址。需要 VPS 已有 curl 和 CA 证书。脚本内嵌了 DDNS 程序，不依赖仓库中的其他文件，在线运行也能正常使用交互菜单。
+以上命令可直接复制运行，无需修改地址。VPS 需要已安装 curl 和 CA 证书。脚本内嵌 DDNS 程序，不依赖仓库中的其他文件。
 
 每次运行都会先完成下面两项，任何一步失败都会停止，不会进入菜单：
 
