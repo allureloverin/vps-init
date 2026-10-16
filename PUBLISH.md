@@ -1,49 +1,30 @@
 # GitHub 发布与维护
 
-项目已发布到公开仓库：[allureloverin/vps-init](https://github.com/allureloverin/vps-init)，默认分支为 `main`。
+仓库：[allureloverin/vps-init](https://github.com/allureloverin/vps-init)，默认分支 `main`。
 
-2026-10-15 已确认仓库及脚本可通过 GitHub 连接读取，raw 脚本地址返回的内容与仓库中的脚本一致。
-
-## 在线运行
-
-在目标 VPS 的 **root Bash 终端**执行：
+在目标 VPS 的 root Bash 终端运行：
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/allureloverin/vps-init/main/vps-init.sh)
 ```
 
-VPS 需要已安装 curl 和 CA 证书。脚本会更新系统软件包并配置北京时间及 NTP，成功后显示 DDNS 和 TCP 调优菜单。
+新机须已有 curl 和 CA 证书。也可以下载 `vps-init.sh` 后用 `sudo bash vps-init.sh` 执行。
 
-## 下载与维护
+当前版本依次执行指定的 apt 命令、北京时间与 NTP/RTC 设置，全部成功后只询问是否运行 tcpfit。选否或回车直接退出。
 
-在开发电脑上克隆仓库：
+在开发电脑上更新：
 
 ```bash
 git clone https://github.com/allureloverin/vps-init.git
 cd vps-init
-```
-
-在 Linux/Bash 环境中修改后，执行检查：
-
-```bash
+# 已克隆时，在自己的工作目录确认本地修改后使用 git pull。
 bash -n vps-init.sh
 python3 -m unittest discover -s tests -v
-```
-
-检查通过后提交并上传：
-
-```bash
-git add .
+git add vps-init.sh README.md HANDOFF.md PUBLISH.md tests/test_vps_init.py
 git commit -m "Describe the change"
 git push origin main
 ```
 
-本地 Git 推送需要 GitHub 登录授权。当前聊天的 GitHub 连接可读取仓库，但写入接口返回 403；可通过 GitHub 网页编辑或上传文件。
+当前版本已通过本地 Bash 语法检查和 13 项模拟测试，覆盖 apt 失败、四项时间状态、NTP 服务补装、是/否分支和调优下载失败。测试不在开发电脑上修改系统设置。
 
-## 验证范围
-
-- 当前 Windows 环境已通过 Bash 语法检查和 12 项隔离测试（8 项初始化测试、4 项 DDNS 安装恢复测试）。
-- 原有 11 项 DDNS worker 测试本次未在 Windows 重跑；迁移前的交接记录报告通过。
-- 完整项目包含 `tests/test_vps_init.py` 和 `.github/workflows/test.yml`，请连同目录上传。配置在 Ubuntu 22.04、24.04 上执行全部 23 项测试。
-- 最新远端执行结果以 [GitHub Actions](https://github.com/allureloverin/vps-init/actions) 为准。
-- 尚未在真实 VPS 上验证系统升级、校时及使用真实 Cloudflare Token 更新 DNS。脚本下载地址可用不代表已完成实机验证。
+仓库的 GitHub Actions 配置在 Ubuntu 22.04、24.04 上执行测试，运行状态以 [Actions 页面](https://github.com/allureloverin/vps-init/actions) 为准。实际 VPS 的软件安装、NTP 联网同步和 tcpfit 调优效果尚需部署验证。

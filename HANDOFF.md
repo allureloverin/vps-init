@@ -1,58 +1,18 @@
-# 项目交接
+# 项目交接：2026-10-16 简化版
 
-## 当前完成情况
+用户最新需求优先于 2026-10-15 版本：
 
-项目是面向新 VPS 的单文件 Bash 初始化工具，入口为 `vps-init.sh`。
+1. 首先执行 `apt update -y && apt install curl wget -y`。
+2. 自动实现北京时间和真实 NTP 同步，检查 `Timezone=Asia/Shanghai`、`NTPSynchronized=yes`、`NTP=yes`、`LocalRTC=no`。
+3. 仅询问是否调优；否或回车直接结束，是则运行 `https://raw.githubusercontent.com/Kylin010/tcpfit/main/tcpfit.sh`。
 
-必须按顺序完成：
+源码入口为 `vps-init.sh`。原版本的系统升级、DDNS 安装和多项菜单已移除。当前只支持 apt + systemd 的 Debian/Ubuntu 系统。校时使用系统已有服务，缺少时补装 systemd-timesyncd；时区数据缺失时补装 tzdata。
 
-1. 更新系统、安装常用工具。
-2. 设置北京时间 `Asia/Shanghai`，启用 chrony，并检查 NTP 启用、服务运行和系统实际同步状态。任何一步失败均停止，不进入菜单。
+`README.md` 包含运行与验证命令，`tests/test_vps_init.py` 验证执行顺序、四项时间状态、错误拦截以及选择是/否的行为。不要在开发机器上直接运行完整脚本，测试通过模拟命令验证逻辑。
 
-随后进入交互菜单：
+支持进程替换在线运行，调优脚本下载失败或为空时停止。已通过 Bash 语法检查和 13 项模拟测试，当前会话没有在真实 VPS 上安装软件或执行校时。
 
-- `1`：配置 Cloudflare DDNS。直接在终端输入主域名、完整解析域名、记录类型、橙云状态和 API Token，不使用 ddns-go 网页。成功后安装 systemd 定时任务，每 5 分钟检查。
-- `2`：下载并运行用户指定的 `https://raw.githubusercontent.com/Kylin010/tcpfit/main/tcpfit.sh`，进入其交互菜单。
-- `0`：退出。
+GitHub 仓库为公开的 allureloverin/vps-init，默认分支 main。本次简化前已读取电脑端发布的脚本、说明和测试；按用户最新要求移除 DDNS 相关功能与测试，保留原有的 GitHub Actions 配置。远程版本以 main 分支的提交记录为准。不要把 ibsgss/TcpQuality 当作本项目发布地址，它只是用户之前提供的运行方式示例。
 
-支持使用 systemd 的 Debian/Ubuntu 和常见 RHEL 系发行版。DDNS 工作脚本嵌在初始化脚本中，在线运行不需要下载其他项目文件。
+文件使用 UTF-8、LF 换行。Windows 开发可使用 WSL。旧版压缩包按日期保留，继续开发请使用 2026-10-16 版本。
 
-## 文件说明
-
-- `vps-init.sh`：完整可运行脚本。
-- `README.md`：运行方法、Cloudflare Token 权限、服务管理和故障处理。
-- `tests/test_vps_init.py`：23 项测试，通过模拟网络与系统命令验证关键行为。
-- `.github/workflows/test.yml`：Ubuntu 22.04、24.04 自动测试配置。
-
-## 已验证与未验证
-
-迁移前的交接记录报告：已通过 Bash 语法检查、原有 19 项模拟测试，以及使用 Bash 进程替换执行帮助入口的检查。
-
-2026-10-15 在当前 Windows 电脑继续开发：修复 DDNS 安装中途失败后无法重试的问题。已有配置时，菜单 `1` 会沿用配置，验证成功后重新安装程序、服务和定时任务；仅残留服务文件时允许重新输入配置。新增 4 项回归测试，覆盖恢复、失败重试和验证失败不覆盖原安装。
-
-当前电脑使用 Git 自带的 Bash（`sh.exe`）通过语法检查、原有 8 项初始化测试和新增 4 项恢复测试，共 12 项。测试入口通过临时适配脚本将 `bash` 命令映射到该 shell；未修改正式 Linux 测试入口。本机未安装 WSL，缺少 jq 等完整 Linux 依赖，原有 11 项 DDNS worker 测试本次未重跑。GitHub Actions 配置已纳入仓库；两套 Ubuntu 环境中的全部 23 项测试结果以仓库 Actions 页面为准。
-
-尚未在真实新 VPS 上执行系统升级和校时，也未使用真实 Cloudflare Token 更新真实 DNS。项目不包含真实 Token 或账号凭证。
-
-在 Linux/Bash 环境中运行验证：
-
-```bash
-bash -n vps-init.sh
-python3 -m unittest discover -s tests -v
-```
-
-测试依赖 Bash、Python 3、jq、curl、flock 等标准工具。Windows 上建议在 WSL 中开发和验证。脚本文件需保留 UTF-8 与 LF 换行。
-
-## GitHub 发布状态
-
-项目已由用户上传到公开仓库 [allureloverin/vps-init](https://github.com/allureloverin/vps-init)，默认分支为 `main`。2026-10-15 已确认当前 GitHub 连接可以读取仓库，但写入接口返回 `403: Resource not accessible by integration`；修改请通过 GitHub 网页或已授权的本地 Git 提交。
-
-用户已将 README 中的示例运行地址替换为实际地址。完整项目应包含 `tests` 和 `.github` 两个目录，网页上传时请一并上传；未上传时不会运行自动测试。
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/allureloverin/vps-init/main/vps-init.sh)
-```
-
-该命令应在目标 VPS 的 root Bash 终端运行，需已有 curl 和 CA 证书。已通过 GitHub 连接确认 raw 脚本内容与仓库脚本一致。
-
-维护方法见 [PUBLISH.md](PUBLISH.md)，自动测试执行状态见 [GitHub Actions](https://github.com/allureloverin/vps-init/actions)。
