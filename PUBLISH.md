@@ -25,6 +25,6 @@ git commit -m "Describe the change"
 git push origin main
 ```
 
-当前版本已通过本地 Bash 语法检查和 13 项模拟测试，覆盖 apt 失败、四项时间状态、NTP 服务补装、是/否分支和调优下载失败。测试不在开发电脑上修改系统设置。
+当前版本已通过本地 Bash 语法检查和 18 项模拟测试，覆盖 apt 失败、四项时间状态、NTP 服务补装、已有 NTP 服务报错时不自动替换、是/否分支，以及调优下载失败、内容不完整、语法错误和超时设置。测试不在开发电脑上修改系统设置。
 
 仓库的 GitHub Actions 配置在 Ubuntu 22.04、24.04 上执行测试，运行状态以 [Actions 页面](https://github.com/allureloverin/vps-init/actions) 为准。实际 VPS 的软件安装、NTP 联网同步和 tcpfit 调优效果尚需部署验证。

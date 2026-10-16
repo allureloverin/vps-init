@@ -31,9 +31,11 @@ bash vps-init.sh
    bash <(curl -fsSL https://raw.githubusercontent.com/Kylin010/tcpfit/main/tcpfit.sh)
    ```
 
-   实现中先检查下载成功且内容非空，再用 Bash 进程替换执行同一份脚本。进入 tcpfit 的交互界面后，按其提示操作；退出 tcpfit 后本脚本结束。
+   实现中下载连接超时为 10 秒、总超时为 120 秒；下载成功且内容非空后，先通过 Bash 语法检查，再用进程替换执行同一份脚本。进入 tcpfit 的交互界面后，按其提示操作；退出 tcpfit 后本脚本结束。
 
 apt 或校时失败时立即停止，不询问调优。当前版本仅更新软件包索引并安装所需组件，不执行 `apt upgrade`，没有 DDNS 菜单。
+
+仅在系统确认缺少 NTP 服务时安装 `systemd-timesyncd`；已有服务启用失败时保留报错并退出，不会自动替换服务。
 
 ## 在线运行
 
@@ -52,4 +54,4 @@ bash -n vps-init.sh
 python3 -m unittest discover -s tests -v
 ```
 
-测试使用模拟系统命令和模拟下载，不会修改宿主系统或执行真实调优。真实 VPS 的软件安装和联网校时尚需部署验证。
+当前共有 18 项测试，使用模拟系统命令和模拟下载，不会修改宿主系统或执行真实调优。GitHub Actions 会在 Ubuntu 22.04、24.04 上运行相同检查，配置位于 `.github/workflows/test.yml`。真实 VPS 的软件安装和联网校时尚需部署验证。

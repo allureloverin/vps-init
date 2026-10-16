@@ -117,6 +117,10 @@ main
 original_timedatectl=$(declare -f timedatectl)
 eval "${original_timedatectl/timedatectl ()/mock_timedatectl ()}"
 timedatectl() {
+    if [[ "$1" == show && "$2" == --property=CanNTP ]]; then
+        echo no
+        return
+    fi
     if [[ "$1" == set-ntp ]]; then
         ntp_attempts=$((ntp_attempts + 1))
         if [[ "$ntp_attempts" -eq 1 ]]; then return 1; fi
@@ -129,6 +133,35 @@ main
         self.assertIn("APT install systemd-timesyncd -y", result.stdout)
         self.assertIn("SERVICE enable --now systemd-timesyncd.service", result.stdout)
 
+    def test_existing_ntp_failure_does_not_install_replacement(self):
+        result = self.shell(r"""
+timedatectl() {
+    case "$1" in
+        set-ntp) return 1 ;;
+        show) echo yes ;;
+    esac
+}
+main
+""", "y\n")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("已有 NTP 服务启用失败", result.stderr)
+        self.assertNotIn("APT install systemd-timesyncd", result.stdout)
+        self.assertNotIn("TCPFIT_RAN", result.stdout)
+
+    def test_ntp_status_failure_stops_without_installing(self):
+        result = self.shell(r"""
+timedatectl() {
+    case "$1" in
+        set-ntp|show) return 1 ;;
+    esac
+}
+main
+""", "y\n")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("无法读取 NTP 服务状态", result.stderr)
+        self.assertNotIn("APT install systemd-timesyncd", result.stdout)
+        self.assertNotIn("TCPFIT_RAN", result.stdout)
+
     def test_download_failure_is_reported(self):
         result = self.shell("curl() { return 22; }\nmain", "y\n")
         self.assertNotEqual(result.returncode, 0)
@@ -139,6 +172,35 @@ main
         result = self.shell("curl() { :; }\nmain", "y\n")
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("下载内容为空", result.stderr)
+
+    def test_partial_download_is_not_executed(self):
+        result = self.shell(r"""
+curl() { printf '%s\n' 'echo PARTIAL_SHOULD_NOT_RUN'; return 18; }
+main
+""", "y\n")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("下载失败", result.stderr)
+        self.assertNotIn("PARTIAL_SHOULD_NOT_RUN", result.stdout)
+
+    def test_invalid_script_is_rejected_before_any_execution(self):
+        result = self.shell(r"""
+curl() { printf '%s\n' 'echo FIRST_LINE_SHOULD_NOT_RUN' 'if'; }
+main
+""", "y\n")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("语法检查失败", result.stderr)
+        self.assertNotIn("FIRST_LINE_SHOULD_NOT_RUN", result.stdout)
+
+    def test_download_has_time_limits(self):
+        result = self.shell(r"""
+curl() {
+    [[ "$*" == *'--connect-timeout 10'* && "$*" == *'--max-time 120'* ]] || return 90
+    printf '%s\n' 'echo TCPFIT_RAN'
+}
+main
+""", "y\n")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("TCPFIT_RAN", result.stdout)
 
     def test_tcpfit_failure_reaches_caller(self):
         result = self.shell("curl() { printf '%s\\n' 'exit 37'; }\nmain", "y\n")

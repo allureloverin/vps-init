@@ -37,8 +37,13 @@ configure_time() {
     fi
     timedatectl set-timezone Asia/Shanghai
     timedatectl set-local-rtc 0
-    # 优先使用系统已有的 NTP 服务；缺少服务时才补装。
+    # 优先使用系统已有的 NTP 服务；确认缺少服务后才补装。
     if ! timedatectl set-ntp true; then
+        local can_ntp
+        can_ntp=$(timedatectl show --property=CanNTP --value) ||
+            die '无法读取 NTP 服务状态，请检查 systemd-timedated。'
+        [[ "$can_ntp" == no ]] ||
+            die '已有 NTP 服务启用失败，请处理上方报错后重试。'
         info '安装并启用 systemd-timesyncd 时间同步服务。'
         DEBIAN_FRONTEND=noninteractive apt install systemd-timesyncd -y
         systemctl enable --now systemd-timesyncd.service
@@ -61,8 +66,10 @@ run_tcpfit() {
     local script
     info '运行 tcpfit 调优脚本。'
     # 先检查下载是否成功，避免进程替换吞掉 curl 的失败状态。
-    script=$(curl -fsSL "$TCPFIT_URL") || die 'tcpfit 下载失败，未执行调优。'
+    script=$(curl -fsSL --connect-timeout 10 --max-time 120 "$TCPFIT_URL") ||
+        die 'tcpfit 下载失败，未执行调优。'
     [[ -n "$script" ]] || die '下载内容为空，未执行调优。'
+    bash -n <(printf '%s\n' "$script") || die 'tcpfit 脚本语法检查失败，未执行调优。'
     bash <(printf '%s\n' "$script")
 }
 
